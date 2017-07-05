@@ -1,0 +1,158 @@
+;;Exercise 2.17.  Define a procedure last-pair that returns the list that contains only the last element of a given (nonempty) list:
+
+(define (bz-last-pair l)
+  (if (null? (cdr l))
+	  (car l)
+	  (last-pair (cdr l))))
+
+(equal? (last-pair (list 23 72 149 34)) 34)
+(equal? (last-pair (list 23 4)) 4)
+(equal? (last-pair (list 23 749 340)) 340)
+
+;;Exercise 2.18.  Define a procedure reverse that takes a list as argument and returns a list of the same elements in reverse order:
+
+(define (bz-reverse l)
+  (define (iter l new-l)
+	(if (null? (cdr l))
+		(cons (car l) new-l)
+		(iter (cdr l) (cons (car l) new-l))))
+  (iter l (list)))
+
+(equal? (bz-reverse (list 1 4 9 16 25)) (list 25 16 9 4 1))
+
+
+;;Exercise 2.19
+(define us-coins (list 5 25 50 10 1))
+(define uk-coins (list 100 50 20 10 5 2 1 0.5))
+
+(define (first-denomination kinds-of-coins)
+  (car kinds-of-coins))
+
+(define (except-first-denomination kinds-of-coins)
+  (cdr kinds-of-coins))
+
+(define (no-more? kinds-of-coins)
+  (null? kinds-of-coins))
+
+(define (cc amount coin-values)
+  (cond ((= amount 0) 1)
+        ((or (< amount 0) (no-more? coin-values)) 0)
+        (else
+         (+ (cc amount
+                (except-first-denomination coin-values))
+            (cc (- amount
+                   (first-denomination coin-values))
+                coin-values)))))
+
+;; The order does not effect the answer.
+;; This is because we are combinations not permutations of coins
+
+;; Exercise 2.20
+
+(define (bz-filter l pred)
+  (if (null? l)
+	  (list)
+	  (if (pred (car l))
+		  (cons (car l) (bz-filter (cdr l) pred))
+		  (bz-filter (cdr l) pred))))
+
+(define (same-parity parity-num . l)
+  (cons parity-num
+		(if (even? parity-num)
+			(bz-filter l even?)
+			(bz-filter l odd?))))
+
+(same-parity 1 2 3 4 5 6 7) ;;(1 3 5 7)
+(same-parity 2 3 4 5 6 7) ;;(2 4 6)
+
+;; Exercise 2.21
+
+(define (square x) (* x x))
+
+(define (square-list items)
+  (if (null? items)
+      (list)
+      (cons (square (car items)) (square-list (cdr items)))))
+
+(define (square-list items)
+  (map square items))
+
+;; Exercise 2.22
+
+;; The first example takes the first element adds it to the final list then the second element and adds it to the final list
+;; When we add will cons it appends to the beginning of the list
+;; With the recursive solution we do not have this problem because we cons up the stack
+
+;; The second solution does not work because the first argument to cons needs to be a primitive value to make a list
+
+;; Exercise 2.23
+(define (bz-for-each proc l)
+  (proc (car l))
+  (if (null? l)
+	  #t
+	  (bz-for-each proc (cdr l))))
+
+;; Exercise 2.24
+
+;;           1
+;;           2
+;;          3 4
+
+
+;;Exercise 2.25.  Give combinations of cars and cdrs that will pick 7 from each of the following lists:
+
+(car (cdr (car (cdr (cdr (list 1 3 (list 5 7) 9))))))
+
+(car (car (list (list 7))))
+
+;;Exercise 2.26
+(define x (list 1 2 3))
+(define y (list 4 5 6))
+
+(append x y) ;; (1 2 3 4 5 6)
+(cons x y) ;; ((1 2 3) 4 5 6)
+(list x y) ;; ((1 2 3) (4 5 6))
+
+;; Exercise 2.27
+(define x (list (list 1 2 (list 9 8 7)) (list 3 4)))
+
+(define (deep-reverse l)
+  (if (pair? l)
+	  (map deep-reverse (reverse l))
+	  l))
+
+;; Exercise 2.28
+
+
+;; There could be a more clean expression of this I think
+;; One issue I am running into is I don't want to go down the null paths because then they will be appended to the list
+(define (fringe l)
+  (cond
+   ((not (pair? l)) (list l))
+   ((null? (cdr l)) (fringe (car l)))
+   (else (append (fringe (car l)) (fringe (cdr l))))))
+
+;; mutation allows the author to cut through the stack - and thus time?
+
+
+;; Exercise 2.29
+
+(define (make-mobile left-branch right-branch)
+  (list left-branch right-branch))
+
+(define (make-branch length structure)
+  (list length structure))
+
+(define (left-branch mobile)
+  (car mobile))
+
+(define (right-branch mobile)
+  (car (cdr mobile)))
+
+(define (branch-length b) (car b))
+
+(define (branch-structure b) (car (cdr b)))
+
+(define (total-weight mobile)
+  (cond ((number? mobile) mobile)
+		(else (+ (total)))))
