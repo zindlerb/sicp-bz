@@ -154,3 +154,119 @@
              (loop (cdr x))
              1))))
   (loop outer-x))
+
+;; 3.3.3
+
+;; Exercise 3.21
+(define (front-ptr queue) (car queue))
+(define (rear-ptr queue) (cdr queue))
+(define (set-front-ptr! queue item) (set-car! queue item))
+(define (set-rear-ptr! queue item) (set-cdr! queue item))
+
+(define (empty-queue? queue) (null? (front-ptr queue)))
+
+(define (make-queue) (cons '() '()))
+
+(define (front-queue queue)
+  (if (empty-queue? queue)
+      (error "FRONT called with an empty queue" queue)
+      (car (front-ptr queue))))
+
+(define (insert-queue! queue item)
+  (let ((new-pair (cons item '())))
+    (cond ((empty-queue? queue)
+           (set-front-ptr! queue new-pair)
+           (set-rear-ptr! queue new-pair)
+           queue)
+          (else
+           (set-cdr! (rear-ptr queue) new-pair)
+           (set-rear-ptr! queue new-pair)
+           queue))))
+
+(define (delete-queue! queue)
+  (cond ((empty-queue? queue)
+         (error "DELETE! called with an empty queue" queue))
+        (else
+         (set-front-ptr! queue (cdr (front-ptr queue)))
+         queue)))
+
+(define q1 (make-queue))
+(insert-queue! q1 'a)
+;; ((a) a)
+(insert-queue! q1 'b)
+;; ((a b) b)
+(delete-queue! q1)
+;; ((b) b)
+(delete-queue! q1)
+;; (() b)
+
+(define (print-queue queue)
+  (print (front-ptr queue)))
+
+;; the back pointer still points to the final element even when it has been deleted.
+;; it is not in the queue but it still is in the program
+
+;; Exercise 3.22
+(define (make-queue)
+  (let ((front-ptr '())
+        (rear-ptr '()))
+	(define (empty-queue?) (null? front-ptr))
+	(define (front-queue)
+	  (if (empty-queue?)
+		  (error "FRONT called with an empty queue" front-ptr)
+		  (car front-ptr)))
+
+	(define (insert-queue!)
+	  (lambda (item)
+		(let ((new-pair (cons item '())))
+		(cond ((empty-queue?)
+			   (set! front-ptr new-pair)
+			   (set! rear-ptr new-pair))
+			  (else
+			   (set-cdr! rear-ptr new-pair)
+			   (set! rear-ptr new-pair))))))
+
+	(define (delete-queue!)
+	  (cond ((empty-queue?)
+			 (error "DELETE! called with an empty queue" front-ptr))
+			(else
+			 (set! front-ptr (cdr front-ptr)))))
+
+	(define (print-queue)
+		(print front-ptr))
+
+	(define (dispatch m)
+	  (cond ((eq? m 'empty-queue?) (empty-queue?))
+            ((eq? m 'front-queue) (front-queue))
+			((eq? m 'insert-queue!) (insert-queue!))
+			((eq? m 'delete-queue!) (delete-queue!))
+			((eq? m 'print-queue) (print-queue))))
+    dispatch))
+
+;;Exercise 3.23.  A deque (``double-ended queue'') is a sequence in which items can be inserted and deleted at either the front or the rear. Operations on deques are the constructor make-deque, the predicate empty-deque?, selectors front-deque and rear-deque, and mutators front-insert-deque!, rear-insert-deque!, front-delete-deque!, and rear-delete-deque!. Show how to represent deques using pairs, and give implementations of the operations.23 All operations should be accomplished in (1) steps.
+
+(define (make-deque) (cons '() (cons '() '())))
+
+(define (get-front-pointer deque)
+	(car (cdr deque)))
+
+(define (get-rear-pointer deque)
+  (cdr (cdr deque)))
+
+(define (front-deque deque)
+  (car (get-front-pointer deque)))
+
+(define (rear-deque deque)
+  (cdr (get-rear deque)))
+
+
+rear-deque
+front-insert-deque!
+rear-insert-deque!
+front-delete-deque!
+rear-delete-deque!
+
+;; Exercise 3.23 can it just be done with the regular implementation?
+
+;; https://mitpress.mit.edu/sicp/full-text/book/book-Z-H-17.html#%_sec_2.4.3
+;;    next up!!
