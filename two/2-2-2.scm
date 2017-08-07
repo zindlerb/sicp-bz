@@ -36,8 +36,7 @@
    ((null? (cdr l)) (fringe (car l)))
    (else (append (fringe (car l)) (fringe (cdr l))))))
 
-;; mutation allows the author to cut through the stack - and thus time?
-
+;; mutation allows the author to cut through the stack...
 
 ;; Exercise 2.29
 
@@ -47,16 +46,34 @@
 (define (make-branch length structure)
   (list length structure))
 
-(define (left-branch mobile)
-  (car mobile))
+;; a
+(define (left-branch mobile) (car mobile))
 
-(define (right-branch mobile)
-  (car (cdr mobile)))
+(define (right-branch mobile) (cadr mobile))
 
-(define (branch-length b) (car b))
+(define (branch-length branch) (car branch))
 
-(define (branch-structure b) (car (cdr b)))
+(define (branch-structure branch) (cadr branch))
 
+;; b
 (define (total-weight mobile)
   (cond ((number? mobile) mobile)
-		(else (+ (total)))))
+        (else (+ (total-weight (branch-structure (left-branch mobile)))
+                 (total-weight (branch-structure (right-branch mobile)))))))
+
+(define mobile-test (make-mobile
+                     (make-branch 2 3)
+                     (make-branch 2 (make-mobile
+                                     (make-branch 3 4)
+                                     (make-branch 7 10)))))
+
+;; c
+;; go
+(define (is-mobile-balanced? mobile)
+  (let ((left-result )))
+  (cond ((number? mobile) mobile)
+        (else (let ((lb (left-branch mobile))
+                    (rb (right-branch mobile)))
+                (equal?
+                 (* (branch-length lb) (total-weight (branch-structure lb)))
+                 (* (branch-length rb) (total-weight (branch-structure rb))))))))

@@ -4,11 +4,11 @@
 (define (bz-last-pair l)
   (if (null? (cdr l))
       (car l)
-      (last-pair (cdr l))))
+      (bz-last-pair (cdr l))))
 
-(equal? (last-pair (list 23 72 149 34)) 34)
-(equal? (last-pair (list 23 4)) 4)
-(equal? (last-pair (list 23 749 340)) 340)
+(equal? (bz-last-pair (list 23 72 149 34)) 34)
+(equal? (bz-last-pair (list 23 4)) 4)
+(equal? (bz-last-pair (list 23 749 340)) 340)
 
 ;;Exercise 2.18.  Define a procedure reverse that takes a list as argument and returns a list of the same elements in reverse order:
 
