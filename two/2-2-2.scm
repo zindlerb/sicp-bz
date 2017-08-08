@@ -141,3 +141,7 @@
         (append rest (map (lambda (v) (cons (car s) v)) rest)))))
 
 ;; we start with no items and add each of the items to it then we take the result of that and add it back to no items. we repeat this - too sleepy for a better explantion :,(
+
+
+;; on
+;; The key to organizing programs so as to more clearly reflect the signal-flow structure is to concentrate on the ``signals'' that flow from one stage in the process to the next. If we represent these signals as lists, then we can use list operations to implement the processing at each of the stages. For instance, we can implement the mapping stages of the signal-flow diagrams using the map procedure from section 2.2.1:
