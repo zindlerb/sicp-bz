@@ -62,18 +62,82 @@
                  (total-weight (branch-structure (right-branch mobile)))))))
 
 (define mobile-test (make-mobile
-                     (make-branch 2 3)
+                     (make-branch 4 5)
                      (make-branch 2 (make-mobile
                                      (make-branch 3 4)
-                                     (make-branch 7 10)))))
+                                     (make-branch 2 6)))))
 
 ;; c
 ;; go
 (define (is-mobile-balanced? mobile)
-  (let ((left-result )))
-  (cond ((number? mobile) mobile)
-        (else (let ((lb (left-branch mobile))
-                    (rb (right-branch mobile)))
-                (equal?
-                 (* (branch-length lb) (total-weight (branch-structure lb)))
-                 (* (branch-length rb) (total-weight (branch-structure rb))))))))
+  (define (in-loop mobile)
+	(if (number? mobile)
+		mobile
+		(let ((l-weight (in-loop (branch-structure (left-branch mobile))))
+			  (r-weight (in-loop (branch-structure (right-branch mobile))))
+			  (l-length (branch-length (left-branch mobile)))
+			  (r-length (branch-length (right-branch mobile))))
+		  (if (or (not l-weight)
+				  (not r-weight)
+				  (not (equal? (* l-weight l-length) (* r-weight r-length))))
+			  #f
+			  (+ l-weight r-weight)))))
+  (number? (in-loop mobile)))
+
+;; I should be saying if pair here for the item and then if not pair
+
+;; d
+
+(define (make-mobile left right)
+  (cons left right))
+
+(define (make-branch length structure)
+  (cons length structure))
+
+(define (left-branch mobile) (car mobile))
+
+(define (right-branch mobile) (cdr mobile))
+
+(define (branch-length branch) (car branch))
+
+(define (branch-structure branch) (cdr branch))
+
+;; only have to change the selectors not the function implemented
+
+;; Exercise 2.30
+(define nil '())
+(define (square-tree tree)
+  (cond ((null? tree) nil)
+        ((not (pair? tree)) (* tree tree))
+        (else (cons (square-tree (car tree))
+                    (square-tree (cdr tree))))))
+
+(define (square-tree tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (square-tree sub-tree)
+             (* sub-tree sub-tree)))
+       tree))
+
+(square-tree (list 1 (list 2 (list 3 4) 5) (list 6 7)))
+
+;; Exercise 2.31
+(define (tree-map proc tree)
+  (map (lambda (sub-tree)
+         (if (pair? sub-tree)
+             (tree-map proc sub-tree)
+             (proc sub-tree)))
+       tree))
+
+(define (square-tree tree) (tree-map (lambda (x) (* x x)) tree))
+
+;; what would reduce tree look like?
+
+;; Exercise 2.32
+(define (subsets s)
+  (if (null? s)
+      (list nil)
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (v) (cons (car s) v)) rest)))))
+
+;; we start with no items and add each of the items to it then we take the result of that and add it back to no items. we repeat this - too sleepy for a better explantion :,(
