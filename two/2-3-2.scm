@@ -140,5 +140,6 @@
 ;; recurse until length three
 ;; recurse on children
 ;;  put into lists -> sort on operators
+;;    this is actually trickier then I was thinking
 (define (pembdas-to-parens exp)
 	)
