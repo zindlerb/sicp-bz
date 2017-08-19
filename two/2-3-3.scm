@@ -79,3 +79,23 @@
                     (adjoin-set x (right-branch set))))))
 ;;Exercise 2.63.  Each of the following two procedures converts a binary tree to a list.
 ;; HERE
+
+(define (tree->list-1 tree)
+  (if (null? tree)
+      ’()
+	   (append (tree->list-1 (left-branch tree))
+			   (cons (entry tree)
+					 (tree->list-1 (right-branch tree))))))
+
+(define (tree->list-2 tree)
+  (define (copy-to-list tree result-list)
+    (if (null? tree)
+        result-list
+        (copy-to-list (left-branch tree)
+                      (cons (entry tree)
+                            (copy-to-list (right-branch tree)
+                                          result-list)))))
+  (copy-to-list tree ’()))
+
+;; a. yes
+;; b. no 1 is n^2 where n is the size of the tree due the append and 2 is n
