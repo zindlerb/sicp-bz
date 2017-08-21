@@ -132,6 +132,9 @@
 
 ;; b. Write the procedures for derivatives of sums and products, and the auxiliary code required to install them in the table used by the program above.
 
+;;
+
+
 
 
 ;;2.73
