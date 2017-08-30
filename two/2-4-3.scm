@@ -41,10 +41,12 @@
 
 (define (attach-tag type-tag contents)
   (cons type-tag contents))
+
 (define (type-tag datum)
   (if (pair? datum)
 	  (car datum)
       (error "Bad tagged datum -- TYPE-TAG" datum)))
+
 (define (contents datum)
   (if (pair? datum)
       (cdr datum)
@@ -132,9 +134,53 @@
 
 ;; b. Write the procedures for derivatives of sums and products, and the auxiliary code required to install them in the table used by the program above.
 
-;;
+;; Old deriv
+;; (define (deriv exp var)
+;;   (cond ((number? exp) 0)
+;;         ((variable? exp) (if (same-variable? exp var) 1 0))
+;;         ((sum? exp)
+;;          (make-sum (deriv (addend exp) var)
+;;                    (deriv (augend exp) var)))
+;;         ((product? exp)
+;;          (make-sum
+;; 		  (make-product (multiplier exp)
+;; 						(deriv (multiplicand exp) var))
+;; 		  (make-product (deriv (multiplier exp) var)
+;; 						(multiplicand exp))))
+;; 		<more rules can be added here>
+;; 		(else (error "unknown expression type -- DERIV" exp))))
 
+(define (install-polar-package)
+  ;; internal procedures
+  (define (magnitude z) (car z))
+  (define (angle z) (cdr z))
+  (define (make-from-mag-ang r a) (cons r a))
+  (define (real-part z)
+    (* (magnitude z) (cos (angle z))))
+  (define (imag-part z)
+    (* (magnitude z) (sin (angle z))))
+  (define (make-from-real-imag x y)
+    (cons (sqrt (+ (square x) (square y)))
+          (atan y x)))
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag ’polar x))
+  (put ’real-part ’(polar) real-part)
+  (put ’imag-part ’(polar) imag-part)
+  (put ’magnitude ’(polar) magnitude)
+  (put ’angle ’(polar) angle)
+  (put ’make-from-real-imag ’polar
+		(lambda (x y) (tag (make-from-real-imag x y))))
+  (put ’make-from-mag-ang ’polar
+		(lambda (r a) (tag (make-from-mag-ang r a))))
+  ’done)
 
+(define (deriv exp var)
+  (cond ((number? exp) 0)
+		((variable? exp) (if (same-variable? exp var) 1 0))
+		(else ((get ’deriv (operator exp)) (operands exp)
+			   var))))
+(define (operator exp) (car exp))
+(define (operands exp) (cdr exp))
 
-
-;;2.73
+(define (install-deriv-package)
+	)
