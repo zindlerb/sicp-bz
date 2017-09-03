@@ -62,33 +62,26 @@
   (cons type-tag contents))
 
 (define (type-tag datum)
-  (if (pair? datum)
-      (car datum)
-      (error "Bad tagged datum -- TYPE-TAG" datum)))
+  (cond ((number? datum) 'scheme-number)
+		((pair? datum) (car datum))
+      	(#t (error "Bad tagged datum -- TYPE-TAG" datum))))
 
 (define (contents datum)
-  (if (pair? datum)
-      (cdr datum)
-      (error "Bad tagged datum -- CONTENTS" datum)))
+  (cond ((number? datum) datum)
+		((pair? datum) (cdr datum))
+		(#t (error "Bad tagged datum -- CONTENTS" datum))))
 
 ;; install math package
 (define (install-scheme-number-package)
-  (define (tag x)
-    (attach-tag 'scheme-number x))
   (put 'add '(scheme-number scheme-number)
-       (lambda (x y) (tag (+ x y))))
+       (lambda (x y) (+ x y)))
   (put 'sub '(scheme-number scheme-number)
-       (lambda (x y) (tag (- x y))))
+       (lambda (x y) (- x y)))
   (put 'mul '(scheme-number scheme-number)
-       (lambda (x y) (tag (* x y))))
+       (lambda (x y) (* x y)))
   (put 'div '(scheme-number scheme-number)
-       (lambda (x y) (tag (/ x y))))
-  (put 'make 'scheme-number
-       (lambda (x) (tag x)))
+       (lambda (x y) (/ x y)))
   'done)
-
-(define (make-scheme-number n)
-  ((get 'make 'scheme-number) n))
 
 (define (install-rational-package)
   ;; internal procedures
@@ -263,10 +256,10 @@ mag-part z1) (imag-part z2))))
   ((get 'make 'polynomial) var terms))
 
 (define (my-assert message a b)
-	(let ((result (eq? (eval a) (eval b))))
+	(let ((result (equal? (eval a) (eval b))))
 	  (print message " " result)
 	  (if (not result)
-		  (print a " val:" (eval a) " is not equal to " b " val:" (eval b) "\n"))))
+		  (print a " val: " (eval a) " is not equal to " b " val: " (eval b) "\n"))))
 
 (install-scheme-number-package)
 (install-rational-package)
@@ -274,12 +267,42 @@ mag-part z1) (imag-part z2))))
 ;; (install-polynomial-package)
 
 ;; Tests
+;; scheme numbers
 (my-assert
 	"add scheme numbers"
-	'(add (make-scheme-number 23) (make-scheme-number 9))
+	'(add 23 9)
 	32)
 
 (my-assert
 	"mult scheme numbers"
-	'(add (make-scheme-number 5) (make-scheme-number 6))
+	'(mul 5 6)
 	30)
+
+(my-assert
+	"div scheme numbers"
+	'(div 20 2)
+	10)
+
+;; rational numbers
+;; '(#r 2 / 3)
+;; '(#i 32 33i)
+
+
+(my-assert
+ "add rational numbers"
+ '(add (make-rational 3 2) (make-rational 1 2))
+ '(make-rational 4 2))
+
+(my-assert
+ "mult rational numbers"
+ '(mul (make-rational 1 2) (make-rational 1 2))
+ '(make-rational 1 4))
+
+;; ->
+;; <-
+;; <->
+
+;; get complex package working
+;; get eq?= working
+;; get simple examples of the poly working
+;; do the exercises in the chapter
