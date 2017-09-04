@@ -12,6 +12,7 @@
 ;; [ ] import the math package
 ;; [ ] add some tests to work against
 ;; [ ] the the 2-5-3 exercises
+(define (text-thing a) (+ a a a))
 (define (make-table)
   (let ((local-table (list '*table*)))
 	(define (assoc key records)
@@ -81,6 +82,8 @@
        (lambda (x y) (* x y)))
   (put 'div '(scheme-number scheme-number)
        (lambda (x y) (/ x y)))
+  (put '=zero? '(scheme-number)
+       (lambda (x) (eq? x 0)))
   'done)
 
 (define (install-rational-package)
@@ -114,29 +117,92 @@
        (lambda (x y) (tag (mul-rat x y))))
   (put 'div '(rational rational)
        (lambda (x y) (tag (div-rat x y))))
-
   (put 'make 'rational
        (lambda (n d) (tag (make-rat n d))))
+  (put '=zero? '(rational)
+       (lambda (x) (eq? (numer x) 0)))
   'done)
 
 (define (make-rational n d)
   ((get 'make 'rational) n d))
 
-;; not working for now.. need to install its number reps
+
+(define (square a) (* a a))
+
+(define (install-rectangular-package)
+  ;; internal procedures
+  (define (real-part z) (car z))
+  (define (imag-part z) (cdr z))
+  (define (make-from-real-imag x y) (cons x y))
+  (define (magnitude z)
+    (sqrt (+ (square (real-part z))
+             (square (imag-part z)))))
+  (define (angle z)
+    (atan (imag-part z) (real-part z)))
+  (define (make-from-mag-ang r a)
+    (cons (* r (cos a)) (* r (sin a))))
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'rectangular x))
+  (put 'real-part '(rectangular) real-part)
+  (put 'imag-part '(rectangular) imag-part)
+  (put 'magnitude '(rectangular) magnitude)
+  (put 'angle '(rectangular) angle)
+  (put 'make-from-real-imag 'rectangular
+		(lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang 'rectangular
+		(lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
+(define (install-polar-package)
+  ;; internal procedures
+  (define (magnitude z) (car z))
+  (define (angle z) (cdr z))
+  (define (make-from-mag-ang r a) (cons r a))
+  (define (real-part z)
+    (* (magnitude z) (cos (angle z))))
+  (define (imag-part z)
+    (* (magnitude z) (sin (angle z))))
+  (define (make-from-real-imag x y)
+    (cons (sqrt (+ (square x) (square y)))
+          (atan y x)))
+  ;; interface to the rest of the system
+  (define (tag x) (attach-tag 'polar x))
+  (put 'real-part '(polar) real-part)
+  (put 'imag-part '(polar) imag-part)
+  (put 'magnitude '(polar) magnitude)
+  (put 'angle '(polar) angle)
+  (put 'make-from-real-imag 'polar
+		(lambda (x y) (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang 'polar
+		(lambda (r a) (tag (make-from-mag-ang r a))))
+  'done)
+
 (define (install-complex-package)
   ;; imported procedures from rectangular and polar packages
   (define (make-from-real-imag x y)
     ((get 'make-from-real-imag 'rectangular) x y))
   (define (make-from-mag-ang r a)
     ((get 'make-from-mag-ang 'polar) r a))
+
+  (define (real-part complex-number)
+	(apply-generic 'real-part complex-number))
+
+  (define (imag-part complex-number)
+	(apply-generic 'imag-part complex-number))
+
+  (define (magnitude complex-number)
+	(apply-generic 'magnitude complex-number))
+
+  (define (angle complex-number)
+	(apply-generic 'angle complex-number))
+
   ;; internal procedures
   (define (add-complex z1 z2)
     (make-from-real-imag (+ (real-part z1) (real-part z2))
                          (+ (imag-part z1) (imag-part z2))))
   (define (sub-complex z1 z2)
     (make-from-real-imag (- (real-part z1) (real-part z2))
-                         (- (i
-mag-part z1) (imag-part z2))))
+                         (- (imag-part z1) (imag-part z2))))
   (define (mul-complex z1 z2)
     (make-from-mag-ang (* (magnitude z1) (magnitude z2))
                        (+ (angle z1) (angle z2))))
@@ -157,7 +223,15 @@ mag-part z1) (imag-part z2))))
        (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'complex
        (lambda (r a) (tag (make-from-mag-ang r a))))
+  (put '=zero? '(complex)
+       (lambda (x) (and (eq? (real-part x) 0) (eq? (imag-part x) 0))))
   'done)
+
+(define (make-complex-real-imag r i)
+	((get 'make-from-real-imag 'complex) r i))
+
+(define (make-complex-mag-ang mag ang)
+  ((get 'make-from-mag-ang 'complex) mag ang))
 
 ;; Generic math operations:
 (define (apply-generic op . args)
@@ -173,6 +247,7 @@ mag-part z1) (imag-part z2))))
 (define (sub x y) (apply-generic 'sub x y))
 (define (mul x y) (apply-generic 'mul x y))
 (define (div x y) (apply-generic 'div x y))
+(define (=zero? x) (apply-generic '=zero? x))
 
 (define (install-polynomial-package)
   (define (make-poly variable term-list)
@@ -263,7 +338,13 @@ mag-part z1) (imag-part z2))))
 
 (install-scheme-number-package)
 (install-rational-package)
-;; (install-complex-package)
+
+(install-rectangular-package)
+(install-polar-package)
+(install-complex-package)
+
+(make-polynomial 'x '((100 1) (2 2) (0 1)))
+
 ;; (install-polynomial-package)
 
 ;; Tests
@@ -283,11 +364,6 @@ mag-part z1) (imag-part z2))))
 	'(div 20 2)
 	10)
 
-;; rational numbers
-;; '(#r 2 / 3)
-;; '(#i 32 33i)
-
-
 (my-assert
  "add rational numbers"
  '(add (make-rational 3 2) (make-rational 1 2))
@@ -298,11 +374,39 @@ mag-part z1) (imag-part z2))))
  '(mul (make-rational 1 2) (make-rational 1 2))
  '(make-rational 1 4))
 
-;; ->
-;; <-
-;; <->
+(my-assert
+ "sub complex numbers"
+ '(sub (make-complex-real-imag 5 2) (make-complex-real-imag 2 1))
+ '(make-complex-real-imag 3 1))
 
-;; get complex package working
-;; get eq?= working
+(my-assert
+ "zero rational"
+ '(=zero? (make-rational 0 2))
+ #t)
+
+(my-assert
+ "zero complex"
+ '(=zero? (make-complex-real-imag 5 2))
+ #f)
+
+(my-assert
+ "zero complex"
+ '(=zero? (make-complex-real-imag 0 0))
+ #t)
+
+(my-assert
+ "add poly"
+ '(=zero? (make-complex-real-imag 0 0))
+ #t)
+
+(my-assert
+ "mul poly"
+ '(=zero? (make-complex-real-imag 0 0))
+ #t)
+
+
+
+
+
 ;; get simple examples of the poly working
 ;; do the exercises in the chapter
