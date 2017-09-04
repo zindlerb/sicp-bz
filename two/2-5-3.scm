@@ -12,7 +12,12 @@
 ;; [ ] import the math package
 ;; [ ] add some tests to work against
 ;; [ ] the the 2-5-3 exercises
-(define (text-thing a) (+ a a a))
+(define (coerce-join l delimiter)
+  (string-join (map ->string l) delimiter))
+
+(define (all pred l)
+	(not (any (lambda (v) (not (pred v))) l)))
+
 (define (make-table)
   (let ((local-table (list '*table*)))
 	(define (assoc key records)
@@ -82,8 +87,12 @@
        (lambda (x y) (* x y)))
   (put 'div '(scheme-number scheme-number)
        (lambda (x y) (/ x y)))
+  (put 'negate '(scheme-number)
+       (lambda (x) (* -1 x)))
   (put '=zero? '(scheme-number)
        (lambda (x) (eq? x 0)))
+  (put 'print '(scheme-number)
+	   (lambda (x) x))
   'done)
 
 (define (install-rational-package)
@@ -117,10 +126,16 @@
        (lambda (x y) (tag (mul-rat x y))))
   (put 'div '(rational rational)
        (lambda (x y) (tag (div-rat x y))))
+  (put 'negate '(rational)
+       (lambda (x) (tag (make-rat (negate (numer x)) (denom x)))))
   (put 'make 'rational
        (lambda (n d) (tag (make-rat n d))))
   (put '=zero? '(rational)
        (lambda (x) (eq? (numer x) 0)))
+  (put 'print '(rational)
+	   (lambda (x)
+		 (coerce-join
+		  (list (numer x) "/" (denom x)) "")))
   'done)
 
 (define (make-rational n d)
@@ -223,8 +238,15 @@
        (lambda (x y) (tag (make-from-real-imag x y))))
   (put 'make-from-mag-ang 'complex
        (lambda (r a) (tag (make-from-mag-ang r a))))
+  (put 'negate '(complex)
+       (lambda (x) (tag (make-from-real-imag (negate (real-part x))
+											 (negate (imag-part x))))))
   (put '=zero? '(complex)
        (lambda (x) (and (eq? (real-part x) 0) (eq? (imag-part x) 0))))
+  (put 'print '(complex)
+	   (lambda (x)
+		 (coerce-join
+		  (list (real-part x) " + " (imag-part x) "i") "")))
   'done)
 
 (define (make-complex-real-imag r i)
@@ -248,6 +270,14 @@
 (define (mul x y) (apply-generic 'mul x y))
 (define (div x y) (apply-generic 'div x y))
 (define (=zero? x) (apply-generic '=zero? x))
+(define (print-math x . args)
+	(let ((p-val (apply-generic 'print x)))
+	  (if (and (not (null? args)) (car args))
+		  (if (or (number? x) (eq? (string-length p-val) 1))
+			p-val
+			(coerce-join (list "(" p-val ")") ""))
+		  (print p-val))))
+(define (negate x) (apply-generic 'negate x))
 
 (define (install-polynomial-package)
   (define (make-poly variable term-list)
@@ -319,12 +349,43 @@
 			   (list p1 p2))))
 
   (define (tag p) (attach-tag 'polynomial p))
+
+  (define (poly-negate p)
+	(make-poly (variable p) (map
+							  (lambda (x) (make-term
+										   (order x)
+										   (negate (coeff x))))
+							  (term-list p))))
+
   (put 'add '(polynomial polynomial)
        (lambda (p1 p2) (tag (add-poly p1 p2))))
+  (put 'sub '(polynomial polynomial)
+       (lambda (p1 p2) (tag (add-poly p1 (poly-negate p2)))))
   (put 'mul '(polynomial polynomial)
        (lambda (p1 p2) (tag (mul-poly p1 p2))))
   (put 'make 'polynomial
        (lambda (var terms) (tag (make-poly var terms))))
+  (put '=zero? '(polynomial)
+	   (lambda (poly)
+		(all (lambda (v) (eq? (coeff v) 0)) (term-list poly))))
+  (put 'negate '(polynomial) (lambda (v) (tag (poly-negate v))))
+  (put 'print '(polynomial)
+		(lambda (poly)
+		  (coerce-join (map
+						(lambda (term)
+						  (coerce-join
+							(list
+								(if (and (eq? (print-math (coeff term) #t) 1)
+										 (not (eq? 0 (order term))))
+									""
+									(print-math (coeff term) #t))
+								(cond	((eq? 0 (order term)) "")
+										((eq? 1 (order term)) (variable poly))
+										(#t (coerce-join
+											 (list (variable poly) "^" (order term))
+										""))))
+							""))
+						(term-list poly)) " + ")))
   'done)
 
 (define (make-polynomial var terms)
@@ -343,9 +404,13 @@
 (install-polar-package)
 (install-complex-package)
 
-(make-polynomial 'x '((100 1) (2 2) (0 1)))
+(install-polynomial-package)
+
+
 
 ;; (install-polynomial-package)
+
+
 
 ;; Tests
 ;; scheme numbers
@@ -394,15 +459,46 @@
  '(=zero? (make-complex-real-imag 0 0))
  #t)
 
+;; x^100 + 2x^2 + 1
+(make-polynomial 'x '((100 1) (2 2) (0 1)))
 (my-assert
  "add poly"
- '(=zero? (make-complex-real-imag 0 0))
- #t)
+ '(add (make-polynomial 'x '((5 1) (2 2) (0 1)))
+	   (make-polynomial 'x '((5 6) (3 2) (0 9))))
+ '(make-polynomial 'x '((5 7) (3 2) (2 2) (0 10))))
 
 (my-assert
- "mul poly"
- '(=zero? (make-complex-real-imag 0 0))
+ "poly zero"
+ '(=zero? (make-polynomial 'x '((5 0) (2 0) (0 0))))
  #t)
+
+;;(y^2 + 1)x^3 + (2y)x + 1
+;; (y)x
+
+(print-math (make-polynomial 'x
+							 (list '(3 6) (list 1 (make-polynomial 'y '((1 2)))) '(0 1))))
+
+(print-math (make-polynomial 'x (list (list 1 (make-polynomial 'y '((1 1)))))))
+(print-math (add
+			 (make-polynomial 'x
+				(list '(3 6) (list 1 (make-polynomial 'y '((1 2)))) '(0 1)))
+			 (make-polynomial 'x (list (list 1 (make-polynomial 'y '((1 1))))))))
+
+
+(print-math (sub
+			 (make-polynomial 'x
+							  (list '(3 6) (list 1 (make-polynomial 'y '((1 2)))) '(0 1)))
+			 (make-polynomial 'x (list (list 1 (make-polynomial 'y '((1 1))))))))
+
+;; (y^2 + 1)x^3 + (2y)x + 1 - (yx)
+;; (y^2 + 1)x^3 + yx + 1
+
+;; 2.88 subtraction is negation plus add
+
+
+
+
+
 
 
 
