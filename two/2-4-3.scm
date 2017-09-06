@@ -176,11 +176,85 @@
 
 (define (deriv exp var)
   (cond ((number? exp) 0)
-		((variable? exp) (if (same-variable? exp var) 1 0))
-		(else ((get ’deriv (operator exp)) (operands exp)
-			   var))))
+        ((variable? exp) (if (same-variable? exp var) 1 0))
+        (else ((get ’deriv (operator exp)) (operands exp)
+               var))))
 (define (operator exp) (car exp))
 (define (operands exp) (cdr exp))
 
 (define (install-deriv-package)
-	)
+  (define (deriv-sum operands var)
+    (make-sum ((deriv ) (get ’deriv (addend operands))  (addend exp) var)
+              (deriv (augend exp) var)))
+  (define (deriv-product exp var)
+    )
+  (put 'deriv '+ deriv-sum)
+  (put 'deriv '* deriv-product))
+
+;; d. We would just need to change the order of arguments to the put statement
+(define (get-record division name)
+  ((get 'get-record division) name))
+
+(define (get-salary division employee)
+  ((get 'get-salary division) employee))
+
+(define (install-division-packages)
+  ;; this is not really needed as there is 1 method per data type
+  ;; methods vs.
+  (put 'get-record 'division ... how to get it)
+  (put 'get-record 'division ... how to get it)
+  (put 'get-record 'division ... how to get it)
+  (put 'get-record 'division ... how to get it)
+
+  (put 'get-salary 'division ... how to get it)
+  (put 'get-salary 'division ... how to get it)
+  (put 'get-salary 'division ... how to get it)
+  (put 'get-salary 'division ... how to get it))
+
+;; c. find employee would loop through the list of divisions and call get record checking if it finds one
+
+;; d. need to add a get record procedure and a get-salary procedure for the new division
+
+(define (make-from-real-imag x y)
+  (define (dispatch op)
+    (cond ((eq? op ’real-part) x)
+          ((eq? op ’imag-part) y)
+          ((eq? op ’magnitude)
+           (sqrt (+ (square x) (square y))))
+          ((eq? op ’angle) (atan y x))
+          (else
+           (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+  dispatch)
+
+;; 2.75
+(define (make-from-mag-ang x y)
+  (define (dispatch op)
+    (cond ((eq? op ’real-part) (* (magnitude z) (cos (angle z))))
+          ((eq? op ’imag-part) (* (magnitude z) (sin (angle z))))
+          ((eq? op ’magnitude) x)
+          ((eq? op ’angle) y)
+          (else
+           (error "Unknown op -- MAKE-FROM-REAL-IMAG" op))))
+  dispatch)
+
+;; g
+methods handle data
+
+;; add method
+- create new method with if statement per data type
+;; add data
+- change every existing method add if statement
+
+;; dd - funcional
+methods handle data
+;; add method
+- add method to every install package
+;; add data
+- add new package
+
+;; mp (really just another way of experessing dd without the global table) OO
+data handles methods
+;; add method
+- add method check to each constructor
+;; add data
+- create a new constructor
