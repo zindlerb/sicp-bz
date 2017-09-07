@@ -248,3 +248,10 @@ Answers of sicp problems
 [ ]  5.5.6  Lexical Addressing
 
 [ ]  5.5.7  Interfacing Compiled Code to the Evaluator
+
+
+- false - define
+- chicken scheme with emacs
+- language tutorial with nice examples
+- debugging
+- strategy for approaching chapters
