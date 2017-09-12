@@ -60,7 +60,7 @@
           ((and (has-value? product) (has-value? m2))
            (set-value! m1
                        (/ (get-value product) (get-value m2))
-                       me))))
+                        me))))
   (define (process-forget-value)
     (forget-value! product me)
     (forget-value! m1 me)
@@ -190,7 +190,9 @@
 								((eq? op '-)
 							 		(adder out (c-exp right) (c-exp left)))
 								((eq? op '*)
-							 		(multiplier (c-exp left) (c-exp right) out))))))
+							 		(multiplier (c-exp left) (c-exp right) out))
+								((eq? op '/)
+								 (multiplier out (c-exp right) (c-exp left)))))))
 			out))
 	(define shared (make-connector))
 	(c-exp (car exp) shared)
@@ -232,3 +234,95 @@
 
 (set-value! C 2 'user)
 (set-value! F2 35.6 'user)
+
+
+;;Exercise 3.33
+
+(define (averager a b c)
+	;; (a * b) / 2 = c
+  (let ((mul-result (make-connector))
+		(item-number (make-connector)))
+	(adder a b mul-result)
+	(constant 2 item-number)
+	(multiplier item-number c mul-result)))
+
+(define (averager-2 a b c)
+  ;; (a + b) / 2 = c
+  (define env (zip '(a b c) (list a b c)))
+  (constrain '(((a * b) / 2) = c) env))
+
+(define a (make-connector))
+(define b (make-connector))
+(define c (make-connector))
+
+(probe "input a" a)
+(probe "input b" b)
+(probe "input c" c)
+
+(averager-2 a b c)
+
+(set-value! b 8 'user)
+(set-value! a 2 'user)
+
+;; 3.34
+;; You would not be able to set the result because the multiplier expects there to be 2 out of the 3 values there
+
+;; Exercise 3.35
+(define (squarer a b)
+  (define (process-new-value)
+    (if (has-value? b)
+        (if (< (get-value b) 0)
+            (error "square less than 0 -- SQUARER" (get-value b))
+			(set-value! a (sqrt (get-value b))))
+		(set-value! b (* (get-value a) (get-value a)))))
+  (define (process-forget-value)
+	(forget-value! a me)
+    (forget-value! b me)
+	(process-new-value))
+  (define (me request)
+	(cond ((eq? request 'I-have-a-value)
+           (process-new-value))
+          ((eq? request 'I-lost-my-value)
+           (process-forget-value))
+          (else
+           (error "Unknown request -- SQUARER" request))))
+	(connect a me)
+	(connect b me)
+  me)
+
+;; 3.36
+;; more interesting with some constraints set
+;; walk through average
+
+
+;; 3.37
+(define (c+ x y)
+  (let ((z (make-connector)))
+    (adder x y z)
+    z))
+
+(define (c* x y)
+  (let ((z (make-connector)))
+    (multiplier x y z)
+    z))
+
+(define (c- x y)
+  (let ((z (make-connector)))
+    (adder z y x)
+    z))
+
+(define (c/ num)
+  (let ((z (make-connector)))
+    (constant num z)
+    z))
+
+(define (cv x y)
+  (let ((z (make-connector)))
+    (multiplier z y x)
+    z))
+
+(define (celsius-fahrenheit-converter x)
+  (c+ (c* (c/ (cv 9) (cv 5))
+		  x) (cv 32)))
+(define C (make-connector))
+(define F (celsius-fahrenheit-converter C))
