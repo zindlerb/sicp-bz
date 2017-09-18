@@ -191,3 +191,27 @@
                                (scale-stream 5 S)))))
 
 ;; Exercise 3.57. How many additions are performed when we compute the nth Fibonacci number using the definition of fibs based on the add-streams procedure? Show that the number of additions would be exponentially greater if we had implemented (delay <exp>) simply as (lambda () <exp>), without using the optimization provided by the memo-proc procedure described in section 3.5.1.64
+
+;; the number of streams grows linearly with n
+;; without the memoization the number of streams would grow n^2
+(define fibs
+  (cons-stream 0
+               (cons-stream 1
+                            (add-streams (stream-cdr fibs)
+                                         fibs))))
+
+;;Exercise 3.58. Give an interpretation of the stream computed by the following procedure:
+
+(define (expand num den radix)
+  (cons-stream
+   (quotient (* num radix) den)
+   (expand (remainder (* num radix) den) den radix)))
+
+(expand 1 7 10)
+;; (1 4 2 ...)
+(expand 3 8 10)
+;; (3 7 5 ....)
+
+
+;; this is essentially doing long division with each next value being another level of prescision
+;;(Quotient is a primitive that returns the integer quotient of two integers.) What are the successive elements produced by (expand 1 7 10) ? What is produced by (expand 3 8 10) ?
