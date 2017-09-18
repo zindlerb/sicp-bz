@@ -283,3 +283,43 @@
 
 (ripple-carry a-list b-list r-list c)
 (propagate)
+
+;; Exercise 3.31
+;; Why does set-action-procedure need to invoke immediatley?
+
+
+(define input-1 (make-wire))
+(define input-2 (make-wire))
+(define sum (make-wire))
+(define carry (make-wire))
+(probe 'sum sum)
+(probe 'carry carry)
+
+(half-adder input-1 input-2 sum carry)
+(set-signal! input-1 1)
+(propagate)
+(set-signal! input-2 1)
+(propagate)
+
+;; To propagate initial values. For example the inverter output e would not be set properly if it was not invoked immediatley. This ensures the constraints are satisfied in the beginning of the program.
+
+;;Exercise 3.32. The procedures to be run during each time segment of the agenda are kept in a queue. Thus, the procedures for each segment are called in the order in which they were added to the agenda (first in, first out). Explain why this order must be used. In particular, trace the behavior of an and-gate whose inputs change from 0,1 to 1,0 in the same segment and say how the behavior would differ if we stored a segment’s procedures in an ordinary list, adding and removing procedures only at the front (last in, first out).
+
+;; 0 0
+;; a1 is set to 1
+;; a1 is set to 0
+;; a2 is set to 1
+
+
+(define (and-gate a1 a2 output)
+  (define (and-action-procedure)
+    (let ((new-value
+           (logical-and (get-signal a1) (get-signal a2))))
+      (after-delay and-gate-delay
+                   (lambda ()
+                     (set-signal! output new-value)))))
+  (add-action! a1 and-action-procedure)
+  (add-action! a2 and-action-procedure)
+  'ok)
+;; It needs to be a queue to execute the updates in the order they were carried out
+;; we would otherwise end up with the opposite results we were expecting
